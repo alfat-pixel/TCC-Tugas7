@@ -1,0 +1,1 @@
+const BASE_URL = "https://notes-be01-371739253078.us-central1.run.app";

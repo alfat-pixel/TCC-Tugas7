@@ -1,0 +1,58 @@
+###REGIS
+POST http://localhost:5000/register
+Content-Type: application/json
+
+{
+  "name": "Arda",
+  "email": "arda@mail.com",
+  "gender": "Laki-laki",
+  "password": "password123"
+}
+
+###LOGIN
+POST http://localhost:5000/login
+Content-Type: application/json
+
+{
+  "email": "arda@mail.com",
+  "password": "password123"
+}
+
+###Refresh Access Token
+GET http://localhost:5000/token
+
+###Get All Notes (Protected)
+GET http://localhost:5000/notes
+Authorization: Bearer <accessToken>
+
+###Get Note By ID (Protected)
+GET http://localhost:5000/getnote-by-id/1
+Authorization: Bearer <accessToken>
+
+###Create Note (Protected)
+POST http://localhost:5000/add-notes
+Content-Type: application/json
+Authorization: Bearer <accessToken>
+
+{
+  "title": "Test Tugas 6",
+  "content": "Belajar JWT + CRUD"
+}
+
+###Update Note (Protected)
+PUT http://localhost:5000/update-notes/1
+Content-Type: application/json
+Authorization: Bearer <accessToken>
+
+{
+  "title": "Judul baru",
+  "content": "Konten diperbarui"
+}
+
+###Delete Note (Protected)
+DELETE http://localhost:5000/delete-notes/1
+Authorization: Bearer <accessToken>
+
+
+###LOGOUT
+DELETE http://localhost:5000/logout

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id"> 
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notes App</title>  <!-- Run Menggunakan Live Server : http://localhost:5500/frontend/frontend.html -->
+    <style>
+      body {
+        display: flex; 
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+      .sidebar {
+        width: 250px;
+        background: #fff;
+        padding: 20px;
+        box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.1);
+        height: 100vh;
+        overflow-y: auto;
+      }
+      .container {
+        flex: 1;
+        padding: 20px;
+      }
+      input,
+      textarea,
+      button {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      button {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:hover {
+        background-color: #218838;
+      }
+      .note-item {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        cursor: pointer;
+      }
+      .note-item:hover {
+        background: #f0f0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar">
+      <h2>Action</h2>
+      <div id="notesList"></div>
+      <h3>Delete Note</h3>
+      <input type="number" id="deleteId" placeholder="Masukkan ID Notes" />
+      <button onclick="deleteNote()">Delete</button>
+      <h3>Update Note</h3>
+      <input type="number" id="updateId" placeholder="Masukkan ID Notes" />
+      <input type="text" id="updateTitle" placeholder="Masukkan Judul Baru" />
+      <button onclick="updateNote()">Update</button>
+    </div>
+    <div class="container">
+      <h1>Notes App</h1>
+      <form id="noteForm">
+        <input type="text" id="title" placeholder="Judul Catatan" required />
+        <textarea id="content" placeholder="Isi Catatan"></textarea>
+        <button type="submit">Add Note</button>
+      </form>
+      <h2>List Notes</h2>
+      <div id="notesContainer"></div>
+    </div>
+    <script src="utils.js"></script>
+    <script>
+      
+      document
+        .getElementById("noteForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const title = document.getElementById("title").value;
+          const content = document.getElementById("content").value;
+
+          const response = await fetch(`${BASE_URL}/add-notes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, content }), // Kirim title & content
+          });
+
+          if (response.ok) {
+            alert("Note berhasil ditambahkan!");
+            document.getElementById("title").value = ""; // Reset input
+            document.getElementById("content").value = "";
+            loadNotes(); // Perbarui list notes
+          }
+        });
+
+        async function loadNotes() {
+        const response = await fetch(`${BASE_URL}/notes`);
+        const notes = await response.json();
+        const notesContainer = document.getElementById("notesContainer");
+        notesContainer.innerHTML = "";
+
+        notes.forEach((note) => {
+          const noteItem = document.createElement("div");
+          noteItem.classList.add("note-item");
+          noteItem.innerHTML = `
+            <strong>${note.id}. ${note.title}</strong>
+            <br>
+            <small>Created at: ${new Date(note.createdAt).toLocaleString()}</small>
+            <br>
+            <small>Updated at: ${new Date(note.updatedAt).toLocaleString()}</small>
+          `;
+          noteItem.onclick = () =>
+            (window.location.href = `detail.html?id=${note.id}`);
+          notesContainer.appendChild(noteItem);
+        });
+      }
+
+      async function deleteNote() {
+        const idInput = document.getElementById("deleteId");
+        const id = idInput.value;
+
+        if (!id) return alert("Masukkan ID notes yang ingin dihapus");
+
+        const response = await fetch(
+          `${BASE_URL}/delete-notes/${id}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        const result = await response.json();
+
+        if (response.status === 404) {
+          alert("Notes dengan ID tersebut tidak ditemukan!");
+          idInput.value = ""; // Clear input field
+        } else if (response.ok) {
+          alert("Notes berhasil dihapus");
+          idInput.value = ""; // Clear input field
+          loadNotes();
+        } else {
+          alert("Terjadi kesalahan saat menghapus notes.");
+        }
+      }
+
+      async function updateNote() {
+        const idInput = document.getElementById("updateId");
+        const titleInput = document.getElementById("updateTitle");
+        const id = idInput.value;
+        const title = titleInput.value;
+
+        if (!id || !title) return alert("Masukkan ID dan judul baru");
+
+        const response = await fetch(
+          `${BASE_URL}/update-notes/${id}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title }),
+          }
+        );
+
+        const result = await response.json();
+
+        if (response.status === 404) {
+          alert("Notes dengan ID tersebut tidak ditemukan!");
+          idInput.value = ""; // Clear input field
+          titleInput.value = ""; // Clear title field
+        } else if (response.ok) {
+          alert("Notes berhasil diperbarui");
+          idInput.value = ""; // Clear input field
+          titleInput.value = ""; // Clear title field
+          loadNotes();
+        } else {
+          alert("Terjadi kesalahan saat memperbarui notes.");
+        }
+      }
+
+      loadNotes();
+    </script>
+  </body>
+</html>
