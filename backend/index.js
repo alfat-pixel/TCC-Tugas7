@@ -9,7 +9,7 @@ import UserRoute from "./routes/userRoute.js"; // ✅ baru
 const app = express();
 
 app.use(cors({
-  origin: "http://localhost:5173", // ganti sesuai domain frontend kamu
+  origin: "http://127.0.0.1:5500", // ganti sesuai domain frontend kamu
   credentials: true,              // ✅ penting agar cookie bisa dikirim
 }));
 app.use(cookieParser());           // ✅ untuk baca cookie

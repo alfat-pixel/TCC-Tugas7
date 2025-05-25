@@ -1,111 +1,128 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Notes</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-        }
-        input, textarea, button {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Detail Notes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+    input,
+    textarea,
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+      padding: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Detail Notes</h1>
-        <input type="text" id="title" placeholder="Judul Catatan" disabled>
-        <textarea id="content" placeholder="Isi Catatan"></textarea>
-        <button onclick="updateContent()">Simpan Perubahan</button>
-        <button onclick="goBack()" style="background-color: rgb(148, 5, 5);">Kembali</button>
-    </div>
-    <script src="utils.js"></script>
-    <script>
-        
+  <div class="container">
+    <h1>Detail Notes</h1>
+    <input type="text" id="title" placeholder="Judul Catatan" disabled />
+    <textarea id="content" placeholder="Isi Catatan"></textarea>
+    <button onclick="updateContent()">Simpan Perubahan</button>
+    <button onclick="goBack()" style="background-color: rgb(148, 5, 5)">Kembali</button>
+  </div>
 
-        async function loadNoteDetail() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
+  <script>
+    const BASE_URL = "http://localhost:5000";
+    const token = localStorage.getItem("accessToken");
 
-    if (!id) {
+    async function loadNoteDetail() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get("id");
+
+      if (!id) {
         alert("ID Notes tidak ditemukan");
         return;
-    }
+      }
 
-    try {
-        console.log("Fetching note with ID:", id);
-        const response = await fetch(`${BASE_URL}/getnote-by-id/${id}`);
+      if (!token) {
+        alert("Silakan login terlebih dahulu");
+        window.location.href = "frontend.html";
+        return;
+      }
+
+      try {
+        const response = await fetch(`${BASE_URL}/getnote-by-id/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
-            console.error("Error response:", response);
-            alert("Gagal mengambil data catatan");
-            return;
+          alert("Gagal mengambil data catatan");
+          return;
         }
 
+        
         const note = await response.json();
-        console.log("Note data:", note);
-
+        
         document.getElementById("title").value = note.title;
         document.getElementById("content").value = note.content || "";
-    } catch (error) {
-        console.error("Fetch error:", error);
+      } catch (error) {
         alert("Terjadi kesalahan saat mengambil data");
+      }
     }
-}
 
-        
-async function updateContent() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
-    const title = document.getElementById("title").value;
-    const content = document.getElementById("content").value;
+    async function updateContent() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get("id");
+      const title = document.getElementById("title").value;
+      const content = document.getElementById("content").value;
 
-    const response = await fetch(`${BASE_URL}/update-notes/${id}`, {
+      if (!token) {
+        alert("Silakan login terlebih dahulu");
+        window.location.href = "frontend.html";
+        return;
+      }
+
+      const response = await fetch(`${BASE_URL}/update-notes/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, content }) // Kirim title & content
-    });
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, content }),
+      });
 
-    if (response.ok) {
+      if (response.ok) {
         alert("Catatan berhasil diperbarui");
-    } else {
+      } else {
         alert("Gagal memperbarui catatan");
+      }
     }
-}
 
-        
-        function goBack() {
-            window.location.href = "frontend.html";
-        }
-        
-        loadNoteDetail();
-    </script>
+    function goBack() {
+      window.location.href = "frontend.html";
+    }
+
+    loadNoteDetail();
+  </script>
 </body>
 </html>

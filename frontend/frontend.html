@@ -1,186 +1,343 @@
 <!DOCTYPE html>
-<html lang="id"> 
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Notes App</title>  <!-- Run Menggunakan Live Server : http://localhost:5500/frontend/frontend.html -->
-    <style>
-      body {
-        display: flex; 
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 20px;
-        background-color: #f4f4f4;
-      }
-      .sidebar {
-        width: 250px;
-        background: #fff;
-        padding: 20px;
-        box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.1);
-        height: 100vh;
-        overflow-y: auto;
-      }
-      .container {
-        flex: 1;
-        padding: 20px;
-      }
-      input,
-      textarea,
-      button {
-        width: 100%;
-        padding: 10px;
-        margin: 10px 0;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-      }
-      button {
-        background-color: #28a745;
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-      button:hover {
-        background-color: #218838;
-      }
-      .note-item {
-        padding: 10px;
-        border-bottom: 1px solid #ddd;
-        cursor: pointer;
-      }
-      .note-item:hover {
-        background: #f0f0f0;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="sidebar">
-      <h2>Action</h2>
-      <div id="notesList"></div>
-      <h3>Delete Note</h3>
-      <input type="number" id="deleteId" placeholder="Masukkan ID Notes" />
-      <button onclick="deleteNote()">Delete</button>
-      <h3>Update Note</h3>
-      <input type="number" id="updateId" placeholder="Masukkan ID Notes" />
-      <input type="text" id="updateTitle" placeholder="Masukkan Judul Baru" />
-      <button onclick="updateNote()">Update</button>
-    </div>
-    <div class="container">
-      <h1>Notes App</h1>
-      <form id="noteForm">
-        <input type="text" id="title" placeholder="Judul Catatan" required />
-        <textarea id="content" placeholder="Isi Catatan"></textarea>
-        <button type="submit">Add Note</button>
-      </form>
-      <h2>List Notes</h2>
-      <div id="notesContainer"></div>
-    </div>
-    <script src="utils.js"></script>
-    <script>
-      
-      document
-        .getElementById("noteForm")
-        .addEventListener("submit", async function (event) {
-          event.preventDefault();
-          const title = document.getElementById("title").value;
-          const content = document.getElementById("content").value;
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notes App</title>
+  <style>
+    body {
+      display: flex;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .sidebar {
+      width: 300px;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .container {
+      flex: 1;
+      padding: 20px;
+    }
+    input,
+    textarea,
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .note-item {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+    }
+    .note-item:hover {
+      background: #f0f0f0;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Email" required />
+      <input type="password" id="loginPassword" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
 
-          const response = await fetch(`${BASE_URL}/add-notes`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title, content }), // Kirim title & content
-          });
+    <h2>Register</h2>
+    <form id="registerForm">
+      <input type="text" id="registerName" placeholder="Nama" required />
+      <input type="email" id="registerEmail" placeholder="Email" required />
+      <input type="text" id="registerGender" placeholder="Gender" required />
+      <input type="password" id="registerPassword" placeholder="Password" required />
+      <button type="submit">Register</button>
+    </form>
 
-          if (response.ok) {
-            alert("Note berhasil ditambahkan!");
-            document.getElementById("title").value = ""; // Reset input
-            document.getElementById("content").value = "";
-            loadNotes(); // Perbarui list notes
-          }
-        });
+    <button id="logoutBtn" class="hidden">Logout</button>
 
-        async function loadNotes() {
-        const response = await fetch(`${BASE_URL}/notes`);
-        const notes = await response.json();
-        const notesContainer = document.getElementById("notesContainer");
-        notesContainer.innerHTML = "";
+    <h3>Delete Note</h3>
+    <input type="number" id="deleteId" placeholder="Masukkan ID Notes" />
+    <button onclick="deleteNote()">Delete</button>
 
-        notes.forEach((note) => {
-          const noteItem = document.createElement("div");
-          noteItem.classList.add("note-item");
-          noteItem.innerHTML = `
-            <strong>${note.id}. ${note.title}</strong>
-            <br>
-            <small>Created at: ${new Date(note.createdAt).toLocaleString()}</small>
-            <br>
-            <small>Updated at: ${new Date(note.updatedAt).toLocaleString()}</small>
-          `;
-          noteItem.onclick = () =>
-            (window.location.href = `detail.html?id=${note.id}`);
-          notesContainer.appendChild(noteItem);
-        });
-      }
+    <h3>Update Note</h3>
+    <input type="number" id="updateId" placeholder="Masukkan ID Notes" />
+    <input type="text" id="updateTitle" placeholder="Masukkan Judul Baru" />
+    <button onclick="updateNote()">Update</button>
+  </div>
 
-      async function deleteNote() {
-        const idInput = document.getElementById("deleteId");
-        const id = idInput.value;
+  <div class="container">
+    <h1>Notes App</h1>
+    <form id="noteForm" class="hidden">
+      <input type="text" id="title" placeholder="Judul Catatan" required />
+      <textarea id="content" placeholder="Isi Catatan"></textarea>
+      <button type="submit">Add Note</button>
+    </form>
 
-        if (!id) return alert("Masukkan ID notes yang ingin dihapus");
+    <h2>List Notes</h2>
+    <div id="notesContainer"></div>
+  </div>
 
-        const response = await fetch(
-          `${BASE_URL}/delete-notes/${id}`,
-          {
-            method: "DELETE",
-          }
-        );
+  <script>
+    const BASE_URL = "http://localhost:5000";
 
-        const result = await response.json();
+    function updateUIOnLogin(isLoggedIn) {
+      document.getElementById("loginForm").classList.toggle("hidden", isLoggedIn);
+      document.getElementById("registerForm").classList.toggle("hidden", isLoggedIn);
+      document.getElementById("logoutBtn").classList.toggle("hidden", !isLoggedIn);
+      document.getElementById("noteForm").classList.toggle("hidden", !isLoggedIn);
+    }
 
-        if (response.status === 404) {
-          alert("Notes dengan ID tersebut tidak ditemukan!");
-          idInput.value = ""; // Clear input field
-        } else if (response.ok) {
-          alert("Notes berhasil dihapus");
-          idInput.value = ""; // Clear input field
-          loadNotes();
-        } else {
-          alert("Terjadi kesalahan saat menghapus notes.");
-        }
-      }
-
-      async function updateNote() {
-        const idInput = document.getElementById("updateId");
-        const titleInput = document.getElementById("updateTitle");
-        const id = idInput.value;
-        const title = titleInput.value;
-
-        if (!id || !title) return alert("Masukkan ID dan judul baru");
-
-        const response = await fetch(
-          `${BASE_URL}/update-notes/${id}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title }),
-          }
-        );
-
-        const result = await response.json();
-
-        if (response.status === 404) {
-          alert("Notes dengan ID tersebut tidak ditemukan!");
-          idInput.value = ""; // Clear input field
-          titleInput.value = ""; // Clear title field
-        } else if (response.ok) {
-          alert("Notes berhasil diperbarui");
-          idInput.value = ""; // Clear input field
-          titleInput.value = ""; // Clear title field
-          loadNotes();
-        } else {
-          alert("Terjadi kesalahan saat memperbarui notes.");
-        }
-      }
-
+    // Cek token awal saat load page
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      updateUIOnLogin(true);
       loadNotes();
-    </script>
-  </body>
+    } else {
+      updateUIOnLogin(false);
+    }
+
+    // Login form submit
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+        const res = await fetch(`${BASE_URL}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",          // <-- penting untuk cookie refresh token
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          localStorage.setItem("accessToken", data.accessToken);
+          alert("Login berhasil");
+          updateUIOnLogin(true);
+          loadNotes();
+        } else {
+          alert(data.message || "Login gagal");
+        }
+      } catch (err) {
+        alert("Terjadi kesalahan saat login: " + err.message);
+      }
+    });
+
+    // Event submit form tambah note
+document.getElementById("noteForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const token = localStorage.getItem("accessToken");
+  if (!token) {
+    alert("Silakan login terlebih dahulu");
+    return;
+  }
+
+  const title = document.getElementById("title").value.trim();
+  const content = document.getElementById("content").value.trim();
+
+  if (!title) {
+    alert("Judul catatan wajib diisi");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${BASE_URL}/add-notes`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ title, content }),
+    });
+
+    if (response.ok) {
+      alert("Note berhasil ditambahkan");
+      document.getElementById("noteForm").reset();
+      loadNotes();
+    } else {
+      const data = await response.json();
+      alert("Gagal menambahkan note: " + (data.message || "Error tidak diketahui"));
+    }
+  } catch (err) {
+    alert("Terjadi kesalahan saat menambahkan note: " + err.message);
+  }
+});
+
+
+    // Register form submit
+    document.getElementById("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("registerName").value.trim();
+      const email = document.getElementById("registerEmail").value.trim();
+      const gender = document.getElementById("registerGender").value.trim();
+      const password = document.getElementById("registerPassword").value;
+
+      try {
+        const res = await fetch(`${BASE_URL}/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, gender, password }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert("Registrasi berhasil, silakan login");
+          document.getElementById("registerForm").reset();
+        } else {
+          alert("Registrasi gagal: " + (data.message || JSON.stringify(data)));
+        }
+      } catch (err) {
+        alert("Terjadi kesalahan saat registrasi: " + err.message);
+      }
+    });
+
+    // Logout button
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/logout`, {
+          method: "DELETE",
+          credentials: "include",          // <-- penting supaya cookie terhapus
+        });
+
+        if (res.ok) {
+          localStorage.removeItem("accessToken");
+          alert("Logout berhasil");
+          updateUIOnLogin(false);
+          document.getElementById("notesContainer").innerHTML = "";
+        } else {
+          alert("Logout gagal");
+        }
+      } catch (err) {
+        alert("Terjadi kesalahan saat logout: " + err.message);
+      }
+    });
+
+    // Load notes function
+    async function loadNotes() {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
+
+      const res = await fetch(`${BASE_URL}/notes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        alert("Token tidak valid atau sudah expired. Silakan login ulang.");
+        localStorage.removeItem("accessToken");
+        updateUIOnLogin(false);
+        return;
+      }
+
+      const notes = await res.json();
+      const notesContainer = document.getElementById("notesContainer");
+      notesContainer.innerHTML = "";
+
+      notes.forEach((note) => {
+        const noteItem = document.createElement("div");
+        noteItem.classList.add("note-item");
+        noteItem.innerHTML = `
+          <strong>${note.id}. ${note.title}</strong>
+          <br>
+          <small>Created at: ${new Date(note.createdAt).toLocaleString()}</small>
+          <br>
+          <small>Updated at: ${new Date(note.updatedAt).toLocaleString()}</small>
+        `;
+        noteItem.onclick = () =>
+          (window.location.href = `detail.html?id=${note.id}`);
+        notesContainer.appendChild(noteItem);
+      });
+    }
+
+    // Delete note function
+    async function deleteNote() {
+      const idInput = document.getElementById("deleteId");
+      const id = idInput.value;
+
+      if (!id) return alert("Masukkan ID notes yang ingin dihapus");
+
+      const token = localStorage.getItem("accessToken");
+      if (!token) return alert("Silakan login terlebih dahulu");
+
+      const response = await fetch(`${BASE_URL}/delete-notes/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 404) {
+        alert("Notes dengan ID tersebut tidak ditemukan!");
+        idInput.value = "";
+      } else if (response.ok) {
+        alert("Notes berhasil dihapus");
+        idInput.value = "";
+        loadNotes();
+      } else {
+        alert("Terjadi kesalahan saat menghapus notes.");
+      }
+    }
+
+    // Update note function
+    async function updateNote() {
+      const idInput = document.getElementById("updateId");
+      const titleInput = document.getElementById("updateTitle");
+      const id = idInput.value;
+      const title = titleInput.value;
+
+      if (!id || !title) return alert("Masukkan ID dan judul baru");
+
+      const token = localStorage.getItem("accessToken");
+      if (!token) return alert("Silakan login terlebih dahulu");
+
+      const response = await fetch(`${BASE_URL}/update-notes/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title }),
+      });
+
+      if (response.status === 404) {
+        alert("Notes dengan ID tersebut tidak ditemukan!");
+        idInput.value = "";
+        titleInput.value = "";
+      } else if (response.ok) {
+        alert("Notes berhasil diperbarui");
+        idInput.value = "";
+        titleInput.value = "";
+        loadNotes();
+      } else {
+        alert("Terjadi kesalahan saat memperbarui notes.");
+      }
+    }
+  </script>
+</body>
 </html>
