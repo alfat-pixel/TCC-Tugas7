@@ -9,19 +9,19 @@ import { verifyToken } from "../middleware/VerifyToken.js";
 
 const router = express.Router();
 
-// ✅ Register user
+//  Register user
 router.post("/register", createUser);
 
-// ✅ Login user
+//  Login user
 router.post("/login", login);
 
-// ✅ Logout user
+//  Logout user
 router.delete("/logout", logout);
 
-// ✅ Get new access token (refresh flow)
+//  Get new access token (refresh flow)
 router.get("/token", getAccessToken);
 
-// 🔒 Protected route example (gunakan ini di routes notes)
+//  Protected route example (gunakan ini di routes notes)
 router.get("/protected", verifyToken, (req, res) => {
   res.status(200).json({ message: "Access granted", user: req.user });
 });
